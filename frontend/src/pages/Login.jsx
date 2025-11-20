@@ -37,7 +37,7 @@ const Login = () => {
         <div className="flex-1 order-1 md:order-1 text-white bg-white/10 backdrop-blur-xl 
           rounded-2xl p-10 shadow-2xl flex flex-col justify-center animate-fadeIn">
 
-          <h1 className="text-5xl font-extrabold tracking-wide mb-6 text-teal-300 drop-shadow-md">
+          <h1 className="text-5xl animate-bounce font-extrabold tracking-wide mb-6 text-teal-300 drop-shadow-md">
             PesiGo
           </h1>
 

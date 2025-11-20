@@ -32,7 +32,6 @@ const Chat = () => {
   const [showForwardPicker, setShowForwardPicker] = useState(false);
 
   const [onlineUsers, setOnlineUsers] = useState(new Set());
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const socketRef = useRef();
@@ -348,13 +347,10 @@ const Chat = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#0A3A47] to-[#012A36] text-white">
-
-      {/* MOBILE SIDEBAR BUTTON */}
       <div className="md:hidden fixed top-3 left-3 right-3 z-40 flex items-center justify-between">
         <button onClick={() => setSidebarOpen((s) => !s)} className="bg-white/10 ml-34 rounded px-3 py-1">
           ☰
         </button>
-
         <div className="text-xs text-green-300">{socketConnected ? "Online" : "Offline"}</div>
       </div>
 
@@ -373,6 +369,15 @@ const Chat = () => {
         <ul className="space-y-3">
           {users.map((u) => {
             const online = onlineUsers.has(u._id);
+
+            /* ===== FIXED DP LOGIC (Supports both Cloudinary + old uploads) ===== */
+            const dp =
+              u.profilePic
+                ? (u.profilePic.startsWith("http")
+                    ? u.profilePic
+                    : `${import.meta.env.VITE_API_BASE_URL}${u.profilePic}`)
+                : "https://res.cloudinary.com/duwaxhwtj/image/upload/v173000/default_dp.png";
+
             return (
               <li
                 key={u._id}
@@ -382,11 +387,7 @@ const Chat = () => {
               >
                 <div className="relative">
                   <img
-                    src={
-                      u.profilePic
-                        ? u.profilePic
-                        : "https://res.cloudinary.com/duwaxhwtj/image/upload/v173000/default_dp.png"
-                    }
+                    src={dp}
                     alt={u.username}
                     className="w-10 h-10 rounded-full border border-white/20 shadow-sm object-cover"
                   />
@@ -411,10 +412,8 @@ const Chat = () => {
         </ul>
       </aside>
 
-      {/* MAIN CHAT AREA */}
+      {/* MAIN CHAT */}
       <main className="flex-1 flex flex-col">
-
-        {/* HEADER */}
         <div className="flex justify-between items-center p-4 bg-white/10 backdrop-blur-md shadow-md md:pl-6 md:pr-6">
           <div>
             <h2 className="text-lg font-semibold">
@@ -426,7 +425,6 @@ const Chat = () => {
             </h2>
             {isTyping && <div className="text-xs text-yellow-300 animate-pulse mt-1">Typing…</div>}
           </div>
-
           <div className="text-xs text-green-300 flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${socketConnected ? "bg-green-400 animate-ping" : "bg-gray-400"}`} />
             {socketConnected ? "Online" : "Offline"}
@@ -445,6 +443,14 @@ const Chat = () => {
 
               {groupedMessages[date].map((m) => {
                 const mine = m.sender === user._id;
+
+                /* Fixed file URL logic */
+                const msgFileUrl = m.fileUrl
+                  ? (m.fileUrl.startsWith("http")
+                      ? m.fileUrl
+                      : `${import.meta.env.VITE_API_BASE_URL}${m.fileUrl}`)
+                  : null;
+
                 return (
                   <div key={m._id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                     <div
@@ -452,7 +458,6 @@ const Chat = () => {
                         mine ? "bg-[#13747D] text-white" : "bg-white/20 text-white"
                       }`}
                     >
-                      {/* DELETE + FORWARD BUTTONS */}
                       <div
                         className="absolute -top-2 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ transform: "translateY(-50%)" }}
@@ -480,19 +485,19 @@ const Chat = () => {
                         </button>
                       </div>
 
-                      {/* MESSAGE CONTENT */}
+                      {/* MESSAGE CONTENT UPDATED */}
                       {m.content === "This message was deleted" ? (
                         <div className="italic text-gray-300">{m.content}</div>
-                      ) : m.fileUrl ? (
+                      ) : msgFileUrl ? (
                         m.fileType?.startsWith?.("image/") ? (
                           <img
-                            src={m.fileUrl}
+                            src={msgFileUrl}
                             className="rounded-lg max-w-[220px] shadow-lg hover:scale-105 transition"
                             alt="sent file"
                           />
                         ) : (
                           <a
-                            href={m.fileUrl}
+                            href={msgFileUrl}
                             download
                             className="text-blue-300 underline hover:text-blue-200"
                           >
@@ -516,7 +521,7 @@ const Chat = () => {
           <div ref={bottomRef} />
         </div>
 
-        {/* INPUT BAR */}
+        {/* INPUT */}
         {receiverId && (
           <form
             onSubmit={sendMessage}
@@ -574,18 +579,12 @@ const Chat = () => {
             style={{ left: menuPos.x, top: menuPos.y }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={deleteForMe}
-              className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
-            >
+            <button onClick={deleteForMe} className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md">
               Delete for me
             </button>
 
             {menuMessage.sender === user._id && (
-              <button
-                onClick={deleteForEveryone}
-                className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
-              >
+              <button onClick={deleteForEveryone} className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md">
                 Delete for everyone
               </button>
             )}
@@ -606,21 +605,18 @@ const Chat = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="font-semibold mb-3">Forward message to</h3>
+
               <div className="max-h-56 overflow-auto space-y-2">
-                {users
-                  .filter((u) => u._id !== user._id)
-                  .map((u) => (
-                    <button
-                      key={u._id}
-                      onClick={() => forwardToUser(u._id)}
-                      className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100"
-                    >
-                      {u.username}{" "}
-                      {onlineUsers.has(u._id) ? (
-                        <span className="text-xs text-green-600 ml-2">● online</span>
-                      ) : null}
-                    </button>
-                  ))}
+                {users.filter((u) => u._id !== user._id).map((u) => (
+                  <button
+                    key={u._id}
+                    onClick={() => forwardToUser(u._id)}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100"
+                  >
+                    {u.username}{" "}
+                    {onlineUsers.has(u._id) && <span className="text-xs text-green-600 ml-2">● online</span>}
+                  </button>
+                ))}
               </div>
 
               <div className="flex justify-end mt-3">
@@ -649,10 +645,7 @@ const Chat = () => {
             </p>
 
             <div className="flex justify-center mt-4 space-x-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg"
-              >
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-300 rounded-lg">
                 Later
               </button>
               <button

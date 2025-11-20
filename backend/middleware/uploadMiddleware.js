@@ -12,9 +12,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-console.log("process.env.CLOUDINARY_CLOUD_NAME", process.env.CLOUDINARY_CLOUD_NAME);
-console.log("process.env.CLOUDINARY_API_KEY", process.env.CLOUDINARY_API_KEY);
-console.log("process.env.CLOUDINARY_API_SECRET", process.env.CLOUDINARY_API_SECRET);
+
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes =
@@ -27,13 +25,16 @@ const fileFilter = (req, file, cb) => {
   else cb("Error: Unsupported file format");
 };
 
+
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "pesigo_uploads",
-    resource_type: "auto",
-    public_id: (req, file) =>
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname),
+  params: async (req, file) => {
+    return {
+      folder: "pesigo_uploads",
+      resource_type: "auto",
+      public_id: `file-${Date.now()}`,
+      format: file.mimetype.split("/")[1], 
+    };
   },
 });
 

@@ -7,34 +7,37 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
     email: {
       type: String,
       required: true,
       unique: true,
     },
+
     password: {
       type: String,
       required: true,
     },
-     profilePic: {
+
+    profilePic: {
       type: String, 
-      default: "", 
+      default: "",
     },
+
     isPremium: {
       type: Boolean,
       default: false,
     },
+
     messageLimit: {
       type: Number,
-      default: 10, 
+      default: 10,
     },
+
     lastMessageDate: {
-      type: Date,
-      default: null,
+      type: String,
+      default: "",
     },
-    isPremium: { type: Boolean, default: false },
-    messageLimit: { type: Number, default: 0 },
-     lastMessageDate: { type: String, default: "" },
   },
   { timestamps: true }
 );

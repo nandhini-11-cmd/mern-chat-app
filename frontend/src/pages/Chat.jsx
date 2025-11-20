@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import API from "../utils/axios";
@@ -21,36 +20,31 @@ const Chat = () => {
   const [newMsg, setNewMsg] = useState("");
   const [receiverId, setReceiverId] = useState("");
   const [users, setUsers] = useState([]);
-  const [showModal, setShowModal] = useState(false); 
+  const [showModal, setShowModal] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
 
   const [menuMessage, setMenuMessage] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
 
- 
-  const [forwarding, setForwarding] = useState(null); 
+  const [forwarding, setForwarding] = useState(null);
   const [showForwardPicker, setShowForwardPicker] = useState(false);
 
-  
   const [onlineUsers, setOnlineUsers] = useState(new Set());
 
-  const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const socketRef = useRef();
   const bottomRef = useRef();
   const user = JSON.parse(localStorage.getItem("user"));
 
- 
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
   }, []);
-
 
   useEffect(() => {
     const socket = io(import.meta.env.VITE_API_BASE_URL, {
@@ -60,14 +54,12 @@ const Chat = () => {
 
     socket.on("connect", () => {
       setSocketConnected(true);
-     
       socket.emit("userOnline", user._id);
       socket.emit("getOnlineUsers");
     });
 
     socket.emit("joinUser", user._id);
 
-    
     socket.on("userOnline", (id) => {
       setOnlineUsers((prev) => new Set([...Array.from(prev), id]));
     });
@@ -93,7 +85,6 @@ const Chat = () => {
     socket.on("limitReached", () => setShowModal(true));
 
     socket.on("receiveMessage", (msg) => {
-      
       setMessages((prev) => {
         const exists = prev.some((m) => m._id === msg._id);
         return exists ? prev : [...prev, msg];
@@ -109,10 +100,8 @@ const Chat = () => {
       socket.emit("userOffline", user._id);
       socket.disconnect();
     };
-    
   }, [user._id, receiverId]);
 
-  
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -125,10 +114,9 @@ const Chat = () => {
     fetchUsers();
   }, [user]);
 
-
   const loadMessages = async (id) => {
     setReceiverId(id);
-    setSidebarOpen(false); 
+    setSidebarOpen(false);
     try {
       const { data } = await API.get(`/api/messages/${id}?type=user`);
       setMessages(data);
@@ -138,11 +126,9 @@ const Chat = () => {
     }
   };
 
-  
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
 
   const sendMessage = async (e) => {
     e?.preventDefault();
@@ -152,10 +138,8 @@ const Chat = () => {
     try {
       const { data } = await API.post("/api/messages", payload);
 
-      
       setMessages((prev) => [...prev, data]);
 
-     
       socketRef.current.emit("sendMessage", {
         senderId: user._id,
         receiverId,
@@ -170,7 +154,6 @@ const Chat = () => {
     }
   };
 
-  
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !receiverId) {
@@ -198,10 +181,9 @@ const Chat = () => {
       });
     } catch (err) {
       console.error("UPLOAD ERROR:", err);
-      alert("Unsupported file format! Try someother!.");
+      alert("Unsupported file! Try another.");
     }
   };
-
 
   const deleteForMe = async () => {
     if (!menuMessage) return;
@@ -216,7 +198,6 @@ const Chat = () => {
     }
   };
 
-  
   const deleteForEveryone = async () => {
     if (!menuMessage) return;
     try {
@@ -234,13 +215,11 @@ const Chat = () => {
     }
   };
 
-
   const startForward = (msg, e) => {
     e.stopPropagation();
     setForwarding(msg);
     setShowForwardPicker(true);
   };
-
 
   const forwardToUser = async (targetUserId) => {
     if (!forwarding || !targetUserId) return;
@@ -273,7 +252,6 @@ const Chat = () => {
     }
   };
 
-
   const openMenuAt = (e, msg) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -285,7 +263,6 @@ const Chat = () => {
     setShowMenu(true);
   };
 
- 
   useEffect(() => {
     const closeAll = () => {
       setShowMenu(false);
@@ -296,7 +273,6 @@ const Chat = () => {
     return () => window.removeEventListener("click", closeAll);
   }, []);
 
-  
   const emitTyping = () => {
     socketRef.current?.emit("typing", { senderId: user._id, receiverId });
     if (typingTimeout) clearTimeout(typingTimeout);
@@ -305,58 +281,53 @@ const Chat = () => {
     }, 1000);
   };
 
- 
   const handleUpgrade = async () => {
     try {
-     
       const { data } = await API.post("/api/payment/create-order", {
-        amount: 99, 
+        amount: 99,
         currency: "INR",
       });
 
-      
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
-        amount: data.amount, 
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: data.amount,
         currency: data.currency,
         name: "PesiGo Premium",
         description: "Unlock unlimited messaging",
         order_id: data.id,
-        handler:  async function (response) {
-  try {
-    const verify = await API.post("/api/payment/verify", {
-      razorpay_order_id: response.razorpay_order_id,
-      razorpay_payment_id: response.razorpay_payment_id,
-      razorpay_signature: response.razorpay_signature,
-    });
+        handler: async function (response) {
+          try {
+            const verify = await API.post("/api/payment/verify", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
 
-    if (verify.data.success) {
-      alert("Payment Successful! 🎉 You’re now Premium.");
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ ...user, isPremium: true })
-      );
-      window.location.reload();
-    } else {
-      alert("Payment verification failed. Please contact support.");
-    }
-  } catch (err) {
-    console.error("Verify error:", err);
-    alert("Payment verification error");
-  }
-},
+            if (verify.data.success) {
+              alert("Payment Successful! 🎉 You’re now Premium.");
+              localStorage.setItem(
+                "user",
+                JSON.stringify({ ...user, isPremium: true })
+              );
+              window.location.reload();
+            } else {
+              alert("Payment verification failed.");
+            }
+          } catch (err) {
+            console.error("Verify error:", err);
+            alert("Payment verification error");
+          }
+        },
         theme: { color: "#13747D" },
       };
 
-      
       const razor = new window.Razorpay(options);
       razor.open();
     } catch (err) {
       console.error("Payment error:", err);
-      alert("Unable to start payment. Check console for details.");
+      alert("Unable to start payment.");
     }
   };
-
 
   const getDateLabel = (date) => {
     const d = dayjs(date);
@@ -364,6 +335,7 @@ const Chat = () => {
     if (d.isYesterday()) return "Yesterday";
     return d.format("ddd, MMM D");
   };
+
   const groupByDate = (msgs) =>
     msgs.reduce((acc, msg) => {
       const day = dayjs(msg.createdAt).format("YYYY-MM-DD");
@@ -371,11 +343,13 @@ const Chat = () => {
       acc[day].push(msg);
       return acc;
     }, {});
+
   const groupedMessages = groupByDate(messages);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#0A3A47] to-[#012A36] text-white">
-      
+
+      {/* MOBILE SIDEBAR BUTTON */}
       <div className="md:hidden fixed top-3 left-3 right-3 z-40 flex items-center justify-between">
         <button onClick={() => setSidebarOpen((s) => !s)} className="bg-white/10 ml-34 rounded px-3 py-1">
           ☰
@@ -384,14 +358,13 @@ const Chat = () => {
         <div className="text-xs text-green-300">{socketConnected ? "Online" : "Offline"}</div>
       </div>
 
-      
+      {/* SIDEBAR */}
       <aside
-  className={`bg-white/5 backdrop-blur-xl border-r border-white/10 p-4 md:static z-30
-    ${sidebarOpen 
-      ? "absolute top-16 left-0 w-full h-[calc(100vh-64px)] overflow-y-auto md:relative md:w-1/4 md:h-auto md:block" 
-      : "hidden md:block md:w-1/4 overflow-y-auto"}`
-  }
->
+        className={`bg-white/5 backdrop-blur-xl border-r border-white/10 p-4 md:static z-30
+          ${sidebarOpen
+            ? "absolute top-16 left-0 w-full h-[calc(100vh-64px)] overflow-y-auto md:relative md:w-1/4 md:h-auto md:block"
+            : "hidden md:block md:w-1/4 overflow-y-auto"}`}
+      >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Chats</h2>
           <Link to="/" className="bg-red-500 px-3 py-1 rounded-md text-white text-sm">Logout</Link>
@@ -411,8 +384,8 @@ const Chat = () => {
                   <img
                     src={
                       u.profilePic
-                        ? `${import.meta.env.VITE_API_BASE_URL}${u.profilePic}`
-                        : `${import.meta.env.VITE_API_BASE_URL}/uploads/default.png`
+                        ? u.profilePic
+                        : "https://res.cloudinary.com/duwaxhwtj/image/upload/v173000/default_dp.png"
                     }
                     alt={u.username}
                     className="w-10 h-10 rounded-full border border-white/20 shadow-sm object-cover"
@@ -438,9 +411,10 @@ const Chat = () => {
         </ul>
       </aside>
 
-      
+      {/* MAIN CHAT AREA */}
       <main className="flex-1 flex flex-col">
-        
+
+        {/* HEADER */}
         <div className="flex justify-between items-center p-4 bg-white/10 backdrop-blur-md shadow-md md:pl-6 md:pr-6">
           <div>
             <h2 className="text-lg font-semibold">
@@ -459,7 +433,7 @@ const Chat = () => {
           </div>
         </div>
 
-      
+        {/* MESSAGES */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {Object.keys(groupedMessages).length === 0 && (
             <div className="text-center text-white/50 mt-10">No messages yet</div>
@@ -473,30 +447,65 @@ const Chat = () => {
                 const mine = m.sender === user._id;
                 return (
                   <div key={m._id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                    <div className={`group relative max-w-xs md:max-w-md p-3 rounded-xl shadow-md transition-all duration-150 ${mine ? "bg-[#13747D] text-white" : "bg-white/20 text-white"}`}>
-                     
-                      <div className="absolute -top-2 right-0 flex gap-1 opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" style={{ transform: "translateY(-50%)" }}>
-                       
-                        <button onClick={(e) => { e.stopPropagation(); startForward(m, e); }} className="bg-white/10 p-1 rounded-md hover:bg-white/20" title="Forward">↪️</button>
+                    <div
+                      className={`group relative max-w-xs md:max-w-md p-3 rounded-xl shadow-md transition-all duration-150 ${
+                        mine ? "bg-[#13747D] text-white" : "bg-white/20 text-white"
+                      }`}
+                    >
+                      {/* DELETE + FORWARD BUTTONS */}
+                      <div
+                        className="absolute -top-2 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ transform: "translateY(-50%)" }}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startForward(m, e);
+                          }}
+                          className="bg-white/10 p-1 rounded-md hover:bg-white/20"
+                          title="Forward"
+                        >
+                          ↪️
+                        </button>
 
-                       
-                        <button onClick={(e) => { e.stopPropagation(); openMenuAt(e, m); }} className="bg-white/10 p-1 rounded-md hover:bg-white/20" title="Delete">🗑️</button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openMenuAt(e, m);
+                          }}
+                          className="bg-white/10 p-1 rounded-md hover:bg-white/20"
+                          title="Delete"
+                        >
+                          🗑️
+                        </button>
                       </div>
 
-                      
+                      {/* MESSAGE CONTENT */}
                       {m.content === "This message was deleted" ? (
                         <div className="italic text-gray-300">{m.content}</div>
                       ) : m.fileUrl ? (
                         m.fileType?.startsWith?.("image/") ? (
-                          <img src={`${import.meta.env.VITE_API_BASE_URL}${m.fileUrl}`} className="rounded-lg max-w-[220px] shadow-lg hover:scale-105 transition" alt="sent file" />
+                          <img
+                            src={m.fileUrl}
+                            className="rounded-lg max-w-[220px] shadow-lg hover:scale-105 transition"
+                            alt="sent file"
+                          />
                         ) : (
-                          <a href={`${import.meta.env.VITE_API_BASE_URL}${m.fileUrl}`} download className="text-blue-300 underline hover:text-blue-200">📄 Download file</a>
+                          <a
+                            href={m.fileUrl}
+                            download
+                            className="text-blue-300 underline hover:text-blue-200"
+                          >
+                            📄 Download file
+                          </a>
                         )
                       ) : (
                         <div>{m.content}</div>
                       )}
 
-                      <div className="text-[10px] text-gray-300 text-right mt-1">{dayjs(m.createdAt).format("hh:mm A")}</div>
+                      <div className="text-[10px] text-gray-300 text-right mt-1">
+                        {dayjs(m.createdAt).format("hh:mm A")}
+                      </div>
                     </div>
                   </div>
                 );
@@ -507,64 +516,154 @@ const Chat = () => {
           <div ref={bottomRef} />
         </div>
 
-       
+        {/* INPUT BAR */}
         {receiverId && (
-          <form onSubmit={sendMessage} className="p-4 flex items-center gap-3 bg-white/10 backdrop-blur-md shadow-inner md:px-6">
+          <form
+            onSubmit={sendMessage}
+            className="p-4 flex items-center gap-3 bg-white/10 backdrop-blur-md shadow-inner md:px-6"
+          >
             <label className="cursor-pointer bg-white/20 p-2 rounded-lg text-xl hover:bg-white/30 transition">
               📎
               <input type="file" className="hidden" onChange={handleFileUpload} />
             </label>
 
-            <button type="button" onClick={() => setShowEmojiPicker((s) => !s)} className="text-2xl hover:scale-110 transition">😀</button>
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker((s) => !s)}
+              className="text-2xl hover:scale-110 transition"
+            >
+              😀
+            </button>
 
             {showEmojiPicker && (
               <div className="absolute bottom-20 left-5 z-[9999]">
-                <EmojiPicker theme="dark" onEmojiClick={(emoji) => { setNewMsg((prev) => prev + emoji.emoji); setShowEmojiPicker(false); }} />
+                <EmojiPicker
+                  theme="dark"
+                  onEmojiClick={(emoji) => {
+                    setNewMsg((prev) => prev + emoji.emoji);
+                    setShowEmojiPicker(false);
+                  }}
+                />
               </div>
             )}
 
-            <input type="text" value={newMsg} onChange={(e) => { setNewMsg(e.target.value); emitTyping(); }} placeholder="Type a message…" className="flex-1 p-3 rounded-xl bg-white/20 text-white placeholder-gray-300 outline-none" />
+            <input
+              type="text"
+              value={newMsg}
+              onChange={(e) => {
+                setNewMsg(e.target.value);
+                emitTyping();
+              }}
+              placeholder="Type a message…"
+              className="flex-1 p-3 rounded-xl bg-white/20 text-white placeholder-gray-300 outline-none"
+            />
 
-            <button type="submit" className="bg-teal-500 hover:bg-teal-600 transition px-4 py-2 rounded-xl text-white shadow-md">Send</button>
+            <button
+              type="submit"
+              className="bg-teal-500 hover:bg-teal-600 transition px-4 py-2 rounded-xl text-white shadow-md"
+            >
+              Send
+            </button>
           </form>
         )}
 
-        
+        {/* DELETE MENU */}
         {showMenu && menuMessage && (
-          <div className="absolute bg-white text-black rounded-xl shadow-xl p-2 w-44 z-50" style={{ left: menuPos.x, top: menuPos.y }} onClick={(e) => e.stopPropagation()}>
-            <button onClick={deleteForMe} className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md">Delete for me</button>
-            {menuMessage.sender === user._id && <button onClick={deleteForEveryone} className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md">Delete for everyone</button>}
+          <div
+            className="absolute bg-white text-black rounded-xl shadow-xl p-2 w-44 z-50"
+            style={{ left: menuPos.x, top: menuPos.y }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={deleteForMe}
+              className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
+            >
+              Delete for me
+            </button>
+
+            {menuMessage.sender === user._id && (
+              <button
+                onClick={deleteForEveryone}
+                className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
+              >
+                Delete for everyone
+              </button>
+            )}
           </div>
         )}
 
-       
+        {/* FORWARD PICKER */}
         {showForwardPicker && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { setShowForwardPicker(false); setForwarding(null); }}>
-            <div className="bg-white text-black rounded-xl shadow-2xl p-4 w-80" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            onClick={() => {
+              setShowForwardPicker(false);
+              setForwarding(null);
+            }}
+          >
+            <div
+              className="bg-white text-black rounded-xl shadow-2xl p-4 w-80"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="font-semibold mb-3">Forward message to</h3>
               <div className="max-h-56 overflow-auto space-y-2">
-                {users.filter((u) => u._id !== user._id).map((u) => (
-                  <button key={u._id} onClick={() => forwardToUser(u._id)} className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100">
-                    {u.username} {onlineUsers.has(u._id) ? <span className="text-xs text-green-600 ml-2">● online</span> : null}
-                  </button>
-                ))}
+                {users
+                  .filter((u) => u._id !== user._id)
+                  .map((u) => (
+                    <button
+                      key={u._id}
+                      onClick={() => forwardToUser(u._id)}
+                      className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100"
+                    >
+                      {u.username}{" "}
+                      {onlineUsers.has(u._id) ? (
+                        <span className="text-xs text-green-600 ml-2">● online</span>
+                      ) : null}
+                    </button>
+                  ))}
               </div>
-              <div className="flex justify-end mt-3"><button onClick={() => { setShowForwardPicker(false); setForwarding(null); }} className="px-3 py-1 rounded-md bg-gray-200">Cancel</button></div>
+
+              <div className="flex justify-end mt-3">
+                <button
+                  onClick={() => {
+                    setShowForwardPicker(false);
+                    setForwarding(null);
+                  }}
+                  className="px-3 py-1 bg-gray-200 rounded-md"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
       </main>
 
-     
+      {/* LIMIT MODAL */}
       {showModal && (
         <div className="absolute inset-0 bg-black/50 flex justify-center items-center">
           <div className="bg-white text-gray-800 p-6 rounded-2xl w-80">
             <h2 className="text-lg font-semibold text-indigo-600">🚫 Message Limit Reached</h2>
-            <p className="text-sm mt-2">You’ve sent all free messages for today. Upgrade to Premium for unlimited chatting.</p>
+            <p className="text-sm mt-2">
+              You’ve sent all free messages for today. Upgrade to Premium for unlimited chatting.
+            </p>
 
             <div className="flex justify-center mt-4 space-x-3">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-300 rounded-lg">Later</button>
-              <button onClick={() => { setShowModal(false); handleUpgrade(); }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Upgrade Now 💳</button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg"
+              >
+                Later
+              </button>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  handleUpgrade();
+                }}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+              >
+                Upgrade Now 💳
+              </button>
             </div>
           </div>
         </div>

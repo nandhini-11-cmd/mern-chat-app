@@ -38,12 +38,14 @@ const Chat = () => {
   const bottomRef = useRef();
   const user = JSON.parse(localStorage.getItem("user"));
 
+  
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
   }, []);
+
 
   useEffect(() => {
     const socket = io(import.meta.env.VITE_API_BASE_URL, {
@@ -62,6 +64,7 @@ const Chat = () => {
     socket.on("userOnline", (id) => {
       setOnlineUsers((prev) => new Set([...Array.from(prev), id]));
     });
+
     socket.on("userOffline", (id) => {
       setOnlineUsers((prev) => {
         const s = new Set(prev);
@@ -77,6 +80,7 @@ const Chat = () => {
     socket.on("typing", ({ senderId }) => {
       if (senderId !== user._id && senderId === receiverId) setIsTyping(true);
     });
+
     socket.on("stopTyping", ({ senderId }) => {
       if (senderId !== user._id && senderId === receiverId) setIsTyping(false);
     });
@@ -101,11 +105,15 @@ const Chat = () => {
     };
   }, [user._id, receiverId]);
 
+  
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const { data } = await API.get("/api/users");
-        setUsers([{ ...user, username: "You (self)" }, ...data.filter((u) => u._id !== user._id)]);
+        setUsers([
+          { ...user, username: "You (self)" },
+          ...data.filter((u) => u._id !== user._id),
+        ]);
       } catch (err) {
         console.error("Failed to fetch users", err);
       }
@@ -113,6 +121,7 @@ const Chat = () => {
     fetchUsers();
   }, [user]);
 
+ 
   const loadMessages = async (id) => {
     setReceiverId(id);
     setSidebarOpen(false);
@@ -125,9 +134,11 @@ const Chat = () => {
     }
   };
 
+ 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
 
   const sendMessage = async (e) => {
     e?.preventDefault();
@@ -153,6 +164,7 @@ const Chat = () => {
     }
   };
 
+ 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !receiverId) {
@@ -184,6 +196,7 @@ const Chat = () => {
     }
   };
 
+
   const deleteForMe = async () => {
     if (!menuMessage) return;
     try {
@@ -203,7 +216,9 @@ const Chat = () => {
       await API.put(`/api/messages/delete-everyone/${menuMessage._id}`);
       setMessages((prev) =>
         prev.map((m) =>
-          m._id === menuMessage._id ? { ...m, content: "This message was deleted", fileUrl: "" } : m
+          m._id === menuMessage._id
+            ? { ...m, content: "This message was deleted", fileUrl: "" }
+            : m
         )
       );
     } catch (err) {
@@ -214,6 +229,7 @@ const Chat = () => {
     }
   };
 
+ 
   const startForward = (msg, e) => {
     e.stopPropagation();
     setForwarding(msg);
@@ -223,7 +239,10 @@ const Chat = () => {
   const forwardToUser = async (targetUserId) => {
     if (!forwarding || !targetUserId) return;
     try {
-      const payload = { receiverId: targetUserId, content: forwarding.content || "" };
+      const payload = {
+        receiverId: targetUserId,
+        content: forwarding.content || "",
+      };
       if (forwarding.fileUrl) {
         payload.fileUrl = forwarding.fileUrl;
         payload.fileType = forwarding.fileType;
@@ -251,6 +270,7 @@ const Chat = () => {
     }
   };
 
+
   const openMenuAt = (e, msg) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
@@ -271,6 +291,7 @@ const Chat = () => {
     window.addEventListener("click", closeAll);
     return () => window.removeEventListener("click", closeAll);
   }, []);
+
 
   const emitTyping = () => {
     socketRef.current?.emit("typing", { senderId: user._id, receiverId });
@@ -328,6 +349,7 @@ const Chat = () => {
     }
   };
 
+  
   const getDateLabel = (date) => {
     const d = dayjs(date);
     if (d.isToday()) return "Today";
@@ -346,37 +368,57 @@ const Chat = () => {
   const groupedMessages = groupByDate(messages);
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-[#0A3A47] to-[#012A36] text-white">
+    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-[#0A3A47] to-[#012A36] text-white">
+    
       <div className="md:hidden fixed top-3 left-3 right-3 z-40 flex items-center justify-between">
-        <button onClick={() => setSidebarOpen((s) => !s)} className="bg-white/10 ml-34 rounded px-3 py-1">
+        <button
+          onClick={() => setSidebarOpen((s) => !s)}
+          className="bg-white/10 rounded px-3 py-1"
+        >
           ☰
         </button>
-        <div className="text-xs text-green-300">{socketConnected ? "Online" : "Offline"}</div>
+
+      
+        <div className="flex items-center justify-end flex-1 pr-1">
+          <span
+            className={`w-2 h-2 rounded-full ${
+              socketConnected ? "bg-green-400" : "bg-gray-400"
+            }`}
+          />
+        </div>
       </div>
 
-      {/* SIDEBAR */}
+     
       <aside
         className={`bg-white/5 backdrop-blur-xl border-r border-white/10 p-4 md:static z-30
-          ${sidebarOpen
-            ? "absolute top-16 left-0 w-full h-[calc(100vh-64px)] overflow-y-auto md:relative md:w-1/4 md:h-auto md:block"
-            : "hidden md:block md:w-1/4 overflow-y-auto"}`}
+          ${
+            sidebarOpen
+              ? "absolute top-16 left-0 w-full h-[calc(100vh-64px)] overflow-y-auto md:relative md:w-1/4 md:h-auto md:block"
+              : "hidden md:block md:w-1/4 overflow-y-auto"
+          }`}
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold tracking-tight">Chats</h2>
-          <Link to="/" className="bg-red-500 px-3 py-1 rounded-md text-white text-sm">Logout</Link>
+          <h2 className="text-2xl font-bold tracking-tight truncate">
+            Chats
+          </h2>
+          <Link
+            to="/"
+            className="bg-red-500 px-3 py-1 rounded-md text-white text-sm"
+          >
+            Logout
+          </Link>
         </div>
 
         <ul className="space-y-3">
           {users.map((u) => {
             const online = onlineUsers.has(u._id);
 
-            /* ===== FIXED DP LOGIC (Supports both Cloudinary + old uploads) ===== */
-            const dp =
-              u.profilePic
-                ? (u.profilePic.startsWith("http")
-                    ? u.profilePic
-                    : `${import.meta.env.VITE_API_BASE_URL}${u.profilePic}`)
-                : "https://res.cloudinary.com/duwaxhwtj/image/upload/v173000/default_dp.png";
+            
+            const dp = u.profilePic
+              ? u.profilePic.startsWith("http")
+                ? u.profilePic
+                : `${import.meta.env.VITE_API_BASE_URL}${u.profilePic}`
+              : "https://res.cloudinary.com/duwaxhwtj/image/upload/v173000/default_dp.png";
 
             return (
               <li
@@ -385,7 +427,7 @@ const Chat = () => {
                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition
                   ${receiverId === u._id ? "bg-white/20 shadow-lg scale-[1.02]" : ""}`}
               >
-                <div className="relative">
+                <div className="relative shrink-0">
                   <img
                     src={dp}
                     alt={u.username}
@@ -399,12 +441,20 @@ const Chat = () => {
                   />
                 </div>
 
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{u.username}</span>
-                    {u.isPremium && <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs">⭐</span>}
+                    <span className="font-medium truncate">
+                      {u.username}
+                    </span>
+                    {u.isPremium && (
+                      <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs">
+                        ⭐
+                      </span>
+                    )}
                   </div>
-                  <div className="text-xs text-white/70">{online ? "Online" : "Offline"}</div>
+                  <div className="text-xs text-white/70">
+                    {online ? "Online" : "Offline"}
+                  </div>
                 </div>
               </li>
             );
@@ -412,52 +462,73 @@ const Chat = () => {
         </ul>
       </aside>
 
-      {/* MAIN CHAT */}
       <main className="flex-1 flex flex-col">
-        <div className="flex justify-between items-center p-4 bg-white/10 backdrop-blur-md shadow-md md:pl-6 md:pr-6">
-          <div>
-            <h2 className="text-lg font-semibold">
+     
+        <div className="flex items-center justify-between gap-3 p-4 bg-white/10 backdrop-blur-md shadow-md md:px-6">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold truncate max-w-[60vw] md:max-w-[420px]">
               {receiverId
                 ? receiverId === user._id
                   ? "You (self)"
-                  : (users.find((u) => u._id === receiverId)?.username || "Chat")
+                  : users.find((u) => u._id === receiverId)?.username || "Chat"
                 : "Select a chat"}
             </h2>
-            {isTyping && <div className="text-xs text-yellow-300 animate-pulse mt-1">Typing…</div>}
+            {isTyping && (
+              <div className="text-xs text-yellow-300 animate-pulse mt-1">
+                Typing…
+              </div>
+            )}
           </div>
-          <div className="text-xs text-green-300 flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${socketConnected ? "bg-green-400 animate-ping" : "bg-gray-400"}`} />
-            {socketConnected ? "Online" : "Offline"}
+
+          <div className="flex items-center gap-2 text-xs text-green-300 shrink-0">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                socketConnected ? "bg-green-400 animate-ping" : "bg-gray-400"
+              }`}
+            />
+            
+            <span className="hidden md:inline">
+              {socketConnected ? "Online" : "Offline"}
+            </span>
           </div>
         </div>
 
-        {/* MESSAGES */}
+       
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {Object.keys(groupedMessages).length === 0 && (
-            <div className="text-center text-white/50 mt-10">No messages yet</div>
+            <div className="text-center text-white/50 mt-10">
+              No messages yet
+            </div>
           )}
 
           {Object.keys(groupedMessages).map((date) => (
             <div key={date}>
-              <div className="text-center text-xs text-gray-300 mb-3">{getDateLabel(date)}</div>
+              <div className="text-center text-xs text-gray-300 mb-3">
+                {getDateLabel(date)}
+              </div>
 
               {groupedMessages[date].map((m) => {
                 const mine = m.sender === user._id;
 
-                /* Fixed file URL logic */
                 const msgFileUrl = m.fileUrl
-                  ? (m.fileUrl.startsWith("http")
-                      ? m.fileUrl
-                      : `${import.meta.env.VITE_API_BASE_URL}${m.fileUrl}`)
+                  ? m.fileUrl.startsWith("http")
+                    ? m.fileUrl
+                    : `${import.meta.env.VITE_API_BASE_URL}${m.fileUrl}`
                   : null;
 
                 return (
-                  <div key={m._id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                  <div
+                    key={m._id}
+                    className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                  >
                     <div
                       className={`group relative max-w-xs md:max-w-md p-3 rounded-xl shadow-md transition-all duration-150 ${
-                        mine ? "bg-[#13747D] text-white" : "bg-white/20 text-white"
+                        mine
+                          ? "bg-[#13747D] text-white"
+                          : "bg-white/20 text-white"
                       }`}
                     >
+                     
                       <div
                         className="absolute -top-2 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ transform: "translateY(-50%)" }}
@@ -485,9 +556,11 @@ const Chat = () => {
                         </button>
                       </div>
 
-                      {/* MESSAGE CONTENT UPDATED */}
+                      
                       {m.content === "This message was deleted" ? (
-                        <div className="italic text-gray-300">{m.content}</div>
+                        <div className="italic text-gray-300">
+                          {m.content}
+                        </div>
                       ) : msgFileUrl ? (
                         m.fileType?.startsWith?.("image/") ? (
                           <img
@@ -521,7 +594,7 @@ const Chat = () => {
           <div ref={bottomRef} />
         </div>
 
-        {/* INPUT */}
+        
         {receiverId && (
           <form
             onSubmit={sendMessage}
@@ -529,7 +602,11 @@ const Chat = () => {
           >
             <label className="cursor-pointer bg-white/20 p-2 rounded-lg text-xl hover:bg-white/30 transition">
               📎
-              <input type="file" className="hidden" onChange={handleFileUpload} />
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
             </label>
 
             <button
@@ -572,26 +649,32 @@ const Chat = () => {
           </form>
         )}
 
-        {/* DELETE MENU */}
+     
         {showMenu && menuMessage && (
           <div
             className="absolute bg-white text-black rounded-xl shadow-xl p-2 w-44 z-50"
             style={{ left: menuPos.x, top: menuPos.y }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button onClick={deleteForMe} className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md">
+            <button
+              onClick={deleteForMe}
+              className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
+            >
               Delete for me
             </button>
 
             {menuMessage.sender === user._id && (
-              <button onClick={deleteForEveryone} className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md">
+              <button
+                onClick={deleteForEveryone}
+                className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md"
+              >
                 Delete for everyone
               </button>
             )}
           </div>
         )}
 
-        {/* FORWARD PICKER */}
+        
         {showForwardPicker && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
@@ -607,16 +690,22 @@ const Chat = () => {
               <h3 className="font-semibold mb-3">Forward message to</h3>
 
               <div className="max-h-56 overflow-auto space-y-2">
-                {users.filter((u) => u._id !== user._id).map((u) => (
-                  <button
-                    key={u._id}
-                    onClick={() => forwardToUser(u._id)}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100"
-                  >
-                    {u.username}{" "}
-                    {onlineUsers.has(u._id) && <span className="text-xs text-green-600 ml-2">● online</span>}
-                  </button>
-                ))}
+                {users
+                  .filter((u) => u._id !== user._id)
+                  .map((u) => (
+                    <button
+                      key={u._id}
+                      onClick={() => forwardToUser(u._id)}
+                      className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100"
+                    >
+                      {u.username}{" "}
+                      {onlineUsers.has(u._id) && (
+                        <span className="text-xs text-green-600 ml-2">
+                          ● online
+                        </span>
+                      )}
+                    </button>
+                  ))}
               </div>
 
               <div className="flex justify-end mt-3">
@@ -635,17 +724,22 @@ const Chat = () => {
         )}
       </main>
 
-      {/* LIMIT MODAL */}
       {showModal && (
         <div className="absolute inset-0 bg-black/50 flex justify-center items-center">
           <div className="bg-white text-gray-800 p-6 rounded-2xl w-80">
-            <h2 className="text-lg font-semibold text-indigo-600">🚫 Message Limit Reached</h2>
+            <h2 className="text-lg font-semibold text-indigo-600">
+              🚫 Message Limit Reached
+            </h2>
             <p className="text-sm mt-2">
-              You’ve sent all free messages for today. Upgrade to Premium for unlimited chatting.
+              You’ve sent all free messages for today. Upgrade to Premium for
+              unlimited chatting.
             </p>
 
             <div className="flex justify-center mt-4 space-x-3">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-300 rounded-lg">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg"
+              >
                 Later
               </button>
               <button

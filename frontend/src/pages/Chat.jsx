@@ -370,23 +370,38 @@ const Chat = () => {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-[#0A3A47] to-[#012A36] text-white">
     
-      <div className="md:hidden fixed top-3 left-3 right-3 z-40 flex items-center justify-between">
-        <button
-          onClick={() => setSidebarOpen((s) => !s)}
-          className="bg-white/10 rounded px-3 py-1"
-        >
-          ☰
-        </button>
+      {/* MOBILE TOP BAR */}
+<div className="md:hidden fixed top-3 left-3 right-3 z-40 flex items-center justify-between px-2">
+  
+  {/* LEFT: MENU BUTTON */}
+  <button
+    onClick={() => setSidebarOpen((s) => !s)}
+    className="bg-white/10 rounded px-3 py-1"
+  >
+    ☰
+  </button>
 
-      
-        <div className="flex items-center justify-end flex-1 pr-1">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              socketConnected ? "bg-green-400" : "bg-gray-400"
-            }`}
-          />
-        </div>
-      </div>
+  {/* CENTER: USERNAME (NO OVERLAP) */}
+  <div className="flex-1 text-center mx-2">
+    <span className="font-semibold truncate block max-w-[140px] mx-auto">
+      {receiverId
+        ? receiverId === user._id
+          ? "You (self)"
+          : users.find((u) => u._id === receiverId)?.username || "Chat"
+        : "Select a chat"}
+    </span>
+  </div>
+
+  {/* RIGHT: ONLINE DOT */}
+  <div className="flex items-center justify-end w-6">
+    <span
+      className={`w-2.5 h-2.5 rounded-full ${
+        socketConnected ? "bg-green-400" : "bg-gray-400"
+      }`}
+    />
+  </div>
+</div>
+
 
      
       <aside

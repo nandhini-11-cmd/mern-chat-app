@@ -534,23 +534,22 @@ const Chat = () => {
           }`}
       >
         <div className="flex justify-between items-center mb-6 gap-2">
-          <h2 className="text-2xl font-bold tracking-tight truncate">
-            Chats
-          </h2>
+          
+          
 
-          <div className="flex items-center gap-2">
+          <div className="flex justify-between items-center gap-16 mt-4">
             {/* Profile open button */}
             <button
               type="button"
               onClick={() => setShowProfileModal(true)}
-              className="hidden sm:flex items-center gap-2 bg-white/10 px-2 py-1 rounded-md text-xs"
+              className="flex items-center gap-2 bg-white/10 px-2 py-1 rounded-md text-xs"
             >
               <img
                 src={currentUserDp}
                 alt="Me"
                 className="w-7 h-7 rounded-full border border-white/30 object-cover"
               />
-              <span>Profile</span>
+              <span>Fresh DP please!</span>
             </button>
 
             <Link
@@ -561,6 +560,9 @@ const Chat = () => {
             </Link>
           </div>
         </div>
+        <h2 className="text-2xl font-bold tracking-tight truncate">
+            Chats
+          </h2>
 
         <ul className="space-y-3">
           {users.map((u) => {
@@ -789,12 +791,12 @@ const Chat = () => {
                 emitTyping();
               }}
               placeholder="Type a message…"
-              className="flex-1 p-3 rounded-xl bg-white/20 text-white placeholder-gray-300 outline-none"
+              className="flex-1 p-2 rounded-xl bg-white/20 text-white placeholder-gray-300 outline-none"
             />
 
             <button
               type="submit"
-              className="bg-teal-500 hover:bg-teal-600 transition px-4 py-2 rounded-xl text-white shadow-md"
+              className="bg-teal-500 hover:bg-teal-600 transition p-2 rounded-xl text-white shadow-md"
             >
               Send
             </button>

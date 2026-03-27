@@ -15,6 +15,7 @@ import userRoutes from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import { startSelfPing } from "./utils/selfPing.js";
 
 connectDB();
 
@@ -142,9 +143,11 @@ io.on("connection", (socket) => {
 /* =======================================================
    START SERVER
 ========================================================= */
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  startSelfPing();
+});

@@ -15,7 +15,7 @@ import userRoutes from "./routes/userRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
-import { startSelfPing } from "./utils/selfPing.js";
+//import { startSelfPing } from "./utils/selfPing.js";
 
 connectDB();
 
@@ -149,5 +149,5 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  startSelfPing();
+  //startSelfPing();
 });
